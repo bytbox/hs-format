@@ -1,6 +1,6 @@
 all: main
 
-main: main.hs
+main: main.hs Text/Format.lhs
 	ghc --make $@
 
 clean:

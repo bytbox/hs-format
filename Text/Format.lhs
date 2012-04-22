@@ -12,9 +12,13 @@
  
 > ident :: Parsec String () FormatPart
 > ident = do
->           char '$'
 >           x <- many1 (alphaNum <|> char '_')
 >           return $ Var x
+
+> variable =
+>   try (char '$' >> ident)
+>   <|>
+>   try (char '$' >> between (char '{') (char '}') ident)
 
 > special = do
 >             char '$' >> char '$'
@@ -25,7 +29,7 @@
 
 > formatParser :: Parsec String () Format
 > formatParser = do
->   xs <- many (try raw <|> try special <|> ident)
+>   xs <- many (try raw <|> try special <|> variable)
 >   eof
 >   return xs
 

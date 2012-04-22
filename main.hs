@@ -6,7 +6,7 @@ import Data.Maybe (fromJust)
 
 import Text.Format
 
-formatString = "$p1 - $p2 [$$$cost]"
+formatString = "$p1 - ${p2} [$$$cost]"
 
 data Record = Record
   { p1    :: Int
