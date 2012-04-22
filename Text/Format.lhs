@@ -15,10 +15,7 @@
 >           x <- many1 (alphaNum <|> char '_')
 >           return $ Var x
 
-> variable =
->   try (char '$' >> ident)
->   <|>
->   try (char '$' >> between (char '{') (char '}') ident)
+> variable = char '$' >> (ident <|> between (char '{') (char '}') ident)
 
 > special = do
 >             char '$' >> char '$'
