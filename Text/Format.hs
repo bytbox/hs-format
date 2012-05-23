@@ -17,6 +17,26 @@ type Format = [FormatPart]
 mapLeft f (Left x) = Left (f x)
 mapLeft _ (Right x) = Right x
 
+{-|
+  Parse a format string into a `Format` object ready to be used in
+  `renderFormat` and `scanFormat`.
+ 
+  The format string consists of raw tokens (ordinary characters), and
+  variables, marked '$varname' or '${varname}'. The dollar sign may be used as
+  a raw token by escaping it with another dollar sign, like so: '$$'. (If you
+  want a variable named $, use '${$}'.)
+
+  Not all syntactically valid parse strings are semantically valid. In
+  particular, two variables must not occur consecutively without interleaving
+  raw tokens. (If this were permitted, the resulting grammar would be
+  ambiguous.)
+
+  Variable names may be used twice; however, this will make the result of
+  `scanFormat` somewhat difficult to deal with.
+  
+  The functions `renderFormatString` and `scanFormatString` are provided as
+  conveniences to make doing this explicitly unnecessary.
+ -}
 parseFormat :: String -> Either String Format
 parseFormat s = 
   case runParser formatParser () "format-string" s of
@@ -63,11 +83,24 @@ renderFormat fmt lu = return . concat =<< (sequence $ flip map fmt $
                         Just o -> Right o
                         Nothing -> Left ("No such variable " ++ v))
 
+-- |A more convenient alternative to using `parseFormat` and `renderFormat`.
 renderFormatString :: String -> (String -> Maybe String) -> Either String String
 renderFormatString s lu = do
                             f <- parseFormat s
                             renderFormat f lu
 
+{-|
+  Parses a string using the given format as a guide, generating a list of pairs
+  of variable names and values.
+  
+  To determine where a variable ends, the entire subsequent string of raw
+  tokens (until the next variable or the end of the string) is used as a
+  terminator. It must occur verbatim in the scanned string or the parse will
+  fail. The smallest match is used: if the format string is '${a}:' and the
+  input string is '1:2:', the parse will exit with an error, as only the first
+  character will be considered part of the variable
+  'a'.
+ -}
 scanFormat :: Format -> String -> Either String [(String, String)]
 scanFormat fmt str = mapLeft show $ runParser scanner () "INPUT" str
   where scanner = do
@@ -88,6 +121,7 @@ scanFormat fmt str = mapLeft show $ runParser scanner () "INPUT" str
                                                   d <- manyTill anyChar $ try $ lookAhead sep
                                                   return [(name, d)]
 
+-- |A more convenient alternative to using `parseFormat` and `scanFormat`.
 scanFormatString :: String -> String -> Either String [(String, String)]
 scanFormatString s str = do
                           f <- parseFormat s
