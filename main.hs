@@ -1,9 +1,5 @@
 module Main where
 
-import Data.Map (Map)
-import qualified Data.Map as M
-import Data.Maybe (fromJust)
-
 import Text.Format
 
 formatString = "$p1 - ${p2} [$$$cost]"
@@ -14,16 +10,28 @@ data Record = Record
   , cost  :: (Int, Int)
   }
 
-fields :: [(String, Record -> String)]
-fields =
-  [ ("p1", show . p1)
-  , ("p2", show . p2)
-  , ("cost", (\(d, c) -> show d) . cost)
-  ]
+fields :: String -> Maybe (Record -> String)
+fields "p1" = return $ show . p1
+fields "p2" = return $ show . p2
+fields "cost" = return $ (\(d, _) -> show d) . cost
+fields _ = Nothing
+
+postponeMaybe :: (a -> Maybe (b -> c)) -> a -> b -> Maybe c
+postponeMaybe f a b = do
+                        f' <- f a
+                        return $ f' b
+
+ff :: Record -> String -> Maybe String
+ff = flip $ postponeMaybe fields
 
 sample = Record 3 56 (5, 44)
+sampleString = "3 - 56 [$5]"
 
-main = case parseFormat formatString of
-        Left x -> putStrLn $ show x
-        Right fmt -> putStrLn $ renderFormat fmt (fromJust . flip lookup fields) sample
+scanMain = scanFormatString formatString sampleString
+
+renderMain = renderFormatString formatString (ff sample)
+
+main = case scanMain of
+        Left s -> putStrLn s
+        Right s -> print s
 

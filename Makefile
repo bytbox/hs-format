@@ -1,8 +1,8 @@
 all: main
 
-main: main.hs Text/Format.lhs
-	ghc --make $@
+main: main.hs Text/Format.hs
+	ghc -W --make $@
 
 clean:
-	${RM} main *.o *.hi
+	${RM} main *.o *.hi */*.o */*.hi
 
