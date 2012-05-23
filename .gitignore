@@ -1,5 +1,2 @@
-*.hi
-*.o
-main
 .*.swp
 dist
