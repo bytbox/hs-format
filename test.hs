@@ -4,14 +4,16 @@ import System.Exit (exitSuccess, exitFailure)
 import Test.QuickCheck
 import Text.Format
 
-prop_id :: Int -> Bool
-prop_id = const True
+prop_render_raw_idempotent :: String -> Bool
+prop_render_raw_idempotent s =
+  let r = renderFormatString "$a" (\_ -> Just s) in
+  r == Right s
+prop_scan_raw_idempotent s =
+  let r = scanFormatString "$a" s in
+  r == Right [("a", s)]
 
-prop_id' :: Int -> Bool
-prop_id' = const False
-
-tests = [ ("Good", prop_id)
-        , ("Bad", prop_id')
+tests = [ ("RenderRawIdempotent", prop_render_raw_idempotent)
+        , ("ScanRawIdempotent", prop_scan_raw_idempotent)
         ]
 
 isSuccess (Success _ _ _) = True
